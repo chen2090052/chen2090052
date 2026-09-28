@@ -23,29 +23,29 @@
 
 - **省级 · 银奖** — 第八届码蹄杯程序设计大赛，本科院校赛道四川赛区省赛
 
-![思佳-省赛银](E:\school\xiexin\image\陈思佳-省赛银奖.jpeg)
+![蹄](image\码蹄杯.jpeg)
 
 - **省级 · 银奖** — 第 22 届百度之星程序设计大赛省赛（人才专项赛道）
 
-![思](E:\school\xiexin\image\陈思佳.jpeg)
+![度之](image\百度之星.jpeg)
 
 - **校级 · 铜奖** — 成都东软学院第七届"挑战杯"大学生创业计划竞赛，团队铜奖（融智声体队）
 
-![MG_20260706_17291](E:\school\xiexin\image\IMG_20260706_172915.jpg)
+![战](image\挑战杯.jpg)
 
 - **专业认证** — Datawhale × 科大讯飞星辰 LLM 微调工程师认证（Fine-tuning Engineer）
 
-![思](E:\school\xiexin\image\陈思佳.png)
+![大讯](image\科大讯飞.png)
 
 ### 2025 年
 
 - **省级 · 一等奖** — 第七届全国高校计算机能力挑战赛 Office 高级应用赛（Excel 科目）四川赛区本研组
 
-![思佳 (2](E:\school\xiexin\image\陈思佳 (2).jpg)
+![算机能力挑战赛省](image\计算机能力挑战赛省赛.jpg)
 
 - **国家级 · 三等奖** — 第七届全国高校计算机能力挑战赛 Office 高级应用赛（Excel 科目）全国决赛本研组
 
-![思](E:\school\xiexin\image\陈思佳.jpg)
+![算机能力挑战赛国](image\计算机能力挑战赛国赛.jpg)
 
 ---
 
