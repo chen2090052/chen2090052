@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "Bazi": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "bazi-mcp@0.1.0"]
+    },
+    "pet-hospital-mcp": {
+      "type": "http",
+      "url": "http://127.0.0.1:8765/mcp"
+    }
+  }
+}

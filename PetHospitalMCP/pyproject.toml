@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pet-hospital-mcp"
+version = "0.1.0"
+description = "Stateless MCP server exposing the Go Pet Hospital REST API to AI agents"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+# `mcp==2.0.0` is pinned deliberately: this project targets the MCPServer class and
+# the stateless 2026-07-28 protocol revision introduced in SDK v2.
+dependencies = [
+    "mcp==2.0.0",
+    "httpx>=0.28,<1",
+    "pydantic>=2.12,<3",
+    "uvicorn>=0.34",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "httpx2>=2,<3",
+]
+
+[project.scripts]
+pet-hospital-mcp = "pet_hospital_mcp.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pet_hospital_mcp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+filterwarnings = ["error::DeprecationWarning:pet_hospital_mcp.*"]

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AnythingLLM 文档上传</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 24px; background: #f6f7f9; }
+  h1 { font-size: 18px; }
+  .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; max-width: 640px; margin-bottom: 16px; }
+  label { display: block; font-size: 13px; color: #444; margin: 10px 0 4px; }
+  input[type=text], input[type=file] { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
+  button { margin-top: 12px; padding: 8px 16px; border: 0; border-radius: 6px; background: #2f6fed; color: #fff; cursor: pointer; }
+  button:disabled { background: #aaa; }
+  #result { white-space: pre-wrap; font-family: monospace; font-size: 12px; max-height: 300px; overflow: auto; background: #111; color: #7dff9a; padding: 10px; border-radius: 6px; }
+  .error { color: #d33; }
+</style>
+</head>
+<body>
+<h1>AnythingLLM 文档上传 · 自动向量化嵌入</h1>
+
+<div class="card">
+  <label>API Key（AnythingLLM 设置 → 开发者 API）</label>
+  <input type="text" id="apiKey" value="D4M1PTB-AN34EJB-QSYHFBV-15GKQ4R">
+  <button id="loadWorkspaces">加载工作区</button>
+</div>
+
+<div class="card">
+  <label>目标工作区（自动选择第一个）</label>
+  <select id="workspace"></select>
+  <label>选择文件</label>
+  <input type="file" id="fileInput" multiple>
+  <button id="upload">上传并向量化</button>
+</div>
+
+<div class="card">
+  <label>结果</label>
+  <div id="result">等待操作...</div>
+</div>
+
+<script>
+const BASE = 'http://localhost:3001/api/v1';
+let selectedFile = null;
+
+const apiKey = () => {
+  const v = document.getElementById('apiKey').value.trim();
+  localStorage.setItem('anythingllm_key', v);
+  return v;
+};
+document.getElementById('apiKey').value = localStorage.getItem('anythingllm_key') || '';
+
+async function call(path, options = {}) {
+  const res = await fetch(BASE + path, {
+    ...options,
+    headers: { Authorization: 'Bearer ' + apiKey(), ...(options.headers || {}) }
+  });
+  const isJson = (res.headers.get('content-type') || '').includes('application/json');
+  const text = await res.text();
+  const data = isJson && text ? JSON.parse(text) : text;
+  if (!res.ok) throw new Error('HTTP ' + res.status + (typeof data === 'object' ? ' ' + (data.error || data.message || '') : ''));
+  return data;
+}
+
+const out = (msg, isErr) => {
+  const el = document.getElementById('result');
+  el.className = isErr ? 'error' : '';
+  el.textContent = typeof msg === 'string' ? msg : JSON.stringify(msg, null, 2);
+};
+
+document.getElementById('loadWorkspaces').onclick = async () => {
+  try {
+    const data = await call('/workspaces');
+    const list = data.workspaces || [];
+    if (!list.length) return out('没有找到工作区。', true);
+    const sel = document.getElementById('workspace');
+    sel.innerHTML = '';
+    list.forEach(w => {
+      const o = document.createElement('option');
+      o.value = w.slug;
+      o.textContent = w.name + ' (' + w.slug + ')';
+      sel.appendChild(o);
+    });
+    out('已加载 ' + list.length + ' 个工作区，默认使用第一个：' + sel.value);
+  } catch (e) {
+    out('加载失败：' + e.message + '\n请检查 API Key。', true);
+  }
+};
+
+document.getElementById('fileInput').onchange = e => {
+  selectedFile = e.target.files[0] || null;
+};
+
+document.getElementById('upload').onclick = async () => {
+  const file = selectedFile || document.getElementById('fileInput').files[0];
+  if (!file) return out('请先选择文件。', true);
+  if (!document.getElementById('workspace').value) return out('请先加载工作区。', true);
+
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('addToWorkspaces', document.getElementById('workspace').value);
+  fd.append('metadata', JSON.stringify({ title: file.name, description: '通过网页上传' }));
+
+  out('上传中：' + file.name + ' ...');
+  document.getElementById('upload').disabled = true;
+  try {
+    const data = await call('/document/upload', { method: 'POST', body: fd });
+    const docs = data.documents || [];
+    out('上传成功，已完成向量化嵌入。\n' + JSON.stringify(docs, null, 2));
+  } catch (e) {
+    out('上传失败：' + e.message, true);
+  } finally {
+    document.getElementById('upload').disabled = false;
+  }
+};
+</script>
+</body>
+</html>
