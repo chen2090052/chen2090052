@@ -1,0 +1,86 @@
+flowchart TD
+    A["chat_stream_files.py 启动"] --> B["读取 config.ini<br/>url / api_key / model"]
+    B --> C["定义 TOOLS：11 个工具的 JSON Schema"]
+    C --> D["主循环<br/>input('请输入问题：')"]
+    D --> E["chat(question, messages)<br/>追加 role:user 消息"]
+
+    E --> F["POST {url}/chat/completions<br/>stream=true + tools=TOOLS"]
+    F --> G["requests 流式读取<br/>iter_lines 解析 data: SSE"]
+
+    G --> H["delta.content<br/>打印并累积回答"]
+    G --> I["delta.tool_calls<br/>按 index 聚合 name / arguments / id"]
+
+    I --> J{"tool_calls 是否为空"}
+    J -- "否" --> K["追加 assistant 消息<br/>含 tool_calls"]
+    K --> L["execute_tool(name, arguments) 分发"]
+    L --> M["追加 role:tool 消息<br/>tool_call_id + 执行结果"]
+    M --> F
+
+    J -- "是" --> N["追加 assistant 最终回答<br/>返回 answer"]
+    N --> D
+
+    L --> T1["getDate<br/>subprocess 调本地命令<br/>cmd /c 'date /t & time /t'"]
+    L --> T2["isleapyear<br/>Python 计算<br/>(y%4==0 and y%100!=0) or y%400==0"]
+    L --> T3["getcwd<br/>os.getcwd()"]
+    L --> T4["listdir<br/>os.listdir + os.path.isdir<br/>目录名加 / 后缀"]
+    L --> T5["getfiletype<br/>扩展名 + mimetypes.guess_type<br/>读前 8KB 嗅探 NUL 判断文本/二进制"]
+    L --> T6["readfile<br/>纯文本限定，200KB 上限<br/>decode: utf-8 -> locale -> gbk"]
+    L --> T7["createfile<br/>os.makedirs + utf-8 写入<br/>已存在则拒绝"]
+    L --> T8["editfile<br/>有 old_text 则 str.replace<br/>否则末尾追加，纯文本限定"]
+    L --> T9["createdir<br/>os.makedirs(exist_ok=True)"]
+    L --> T10["deletedir<br/>shutil.rmtree 支持非空目录<br/>拒绝根目录/当前目录"]
+    L --> T11["deletefile<br/>os.remove<br/>目录提示改用 deletedir"]
+
+    T1 --> M
+    T2 --> M
+    T3 --> M
+    T4 --> M
+    T5 --> M
+    T6 --> M
+    T7 --> M
+    T8 --> M
+    T9 --> M
+    T10 --> M
+    T11 --> M
+
+    S1["decode_output / decode_bytes<br/>utf-8 / gbk / locale 编码回退"] -.-> T1
+    S1 -.-> T6
+    S1 -.-> T8
+    S2["is_text_bytes<br/>NUL 字节 + 解码探测"] -.-> T5
+    S2 -.-> T6
+    S2 -.-> T8
+
+    D -- "KeyboardInterrupt / EOFError" --> Z["退出程序"]
+
+    subgraph CFG["配置层"]
+        B
+        C
+    end
+    subgraph LOOP["对话控制层"]
+        E
+        F
+        G
+        H
+        I
+        J
+        K
+        N
+        M
+    end
+    subgraph TOOLS_LAYER["工具层 execute_tool"]
+        T1
+        T2
+        T3
+        T4
+        T5
+        T6
+        T7
+        T8
+        T9
+        T10
+        T11
+    end
+    subgraph HELPERS["公共辅助"]
+        S1
+        S2
+    end
