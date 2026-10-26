@@ -1,2 +1,14 @@
 Agent/Practice01/config.ini
 Agent/Practice02/config.ini
+Agent/config.toml
+Agent/cAgent/config.toml
+Agent/cAgent/config.ini
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# IDE / local settings
+.idea/
+Agent/cAgent/.claude/settings.local.json

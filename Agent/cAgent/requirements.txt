@@ -1,0 +1,10 @@
+# requirements.txt
+# core 公共依赖
+requests>=2.31.0
+pydantic>=2.0.0
+trafilatura>=2.0.0   # fetchWeb：网页正文提取
+
+# tui 专属依赖（可选）
+# textual>=0.50.0
+
+# 系统依赖：fetchWeb 需要本地 curl（Windows 10+ 自带，或自行安装并加入 PATH）
