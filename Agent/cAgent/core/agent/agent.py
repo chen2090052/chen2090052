@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 from ..llm.base import StreamDelta
 from ..events.base import AgentEventHandler
 from ..tools.executor import Tools
+from ..skills.registry import SkillRegistry
 from ..config.config import get_config
 
 
@@ -10,7 +11,9 @@ class Agent:
     def __init__(self, llm_client=None, event_handler: Optional[AgentEventHandler] = None):
         self.config = get_config()
         self.event_handler = event_handler
-        self.tools = Tools()
+        self.skills = SkillRegistry().discover()
+        self.tools = Tools(self.skills)
+        self.system_prompt = self.skills.system_prompt()
         if llm_client is None:
             cfg = self.config.get("llm", default={})
             base_url = cfg.get("base_url") or "http://localhost:11434/v1"
@@ -26,6 +29,8 @@ class Agent:
         else:
             self.llm = llm_client
         self.messages: List[Dict[str, Any]] = []
+        if self.system_prompt:
+            self.messages.append({"role": "system", "content": self.system_prompt})
 
     def set_handler(self, event_handler: AgentEventHandler):
         self.event_handler = event_handler

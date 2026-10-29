@@ -6,9 +6,10 @@ import shutil
 import socket
 import ssl
 import subprocess
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from ..config.config import get_config
+from ..skills.registry import SkillRegistry
 from .fetchweb import fetch_web
 from .runcli import DEFAULT_MAX_OUTPUT_CHARS, DEFAULT_TIMEOUT, run_cli
 
@@ -142,7 +143,8 @@ def _is_text_bytes(raw: bytes) -> bool:
 
 
 class Tools:
-    def __init__(self):
+    def __init__(self, skills: Optional[SkillRegistry] = None):
+        self.skills = skills
         self._tools = [
             {
                 "type": "function",
@@ -244,12 +246,58 @@ class Tools:
             {"type": "function", "function": {"name": "createdir", "description": "创建目录", "parameters": {"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"]}}},
             {"type": "function", "function": {"name": "deletedir", "description": "删除目录", "parameters": {"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"]}}},
             {"type": "function", "function": {"name": "deletefile", "description": "删除文件", "parameters": {"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"]}}},
+            {
+                "type": "function",
+                "function": {
+                    "name": "loadSkill",
+                    "description": (
+                        "加载指定 Skill 的完整说明，或读取该 Skill 目录中引用的附加文件。"
+                        "当任务与某个 Skill 的描述匹配，或用户要求使用/加载某个 Skill 时，"
+                        "必须先调用本工具，不要只根据描述回答。"
+                    ),
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "要加载的 Skill 名称",
+                            },
+                            "filename": {
+                                "type": "string",
+                                "description": (
+                                    "可选，需要加载的 Skill 文件路径或名称。"
+                                    "支持相对于 Skill 目录的路径、项目相对路径及绝对路径；"
+                                    "省略时返回 SKILL.md 全文"
+                                ),
+                            },
+                        },
+                        "required": ["name"],
+                    },
+                },
+            },
         ]
 
     def get_schemas(self):
         return self._tools
 
     def execute(self, name: str, arguments: Dict[str, Any]) -> str:
+        if name == "loadSkill":
+            if self.skills is None:
+                return "当前未加载任何 Skill。"
+            filename = (
+                arguments.get("filename")
+                or arguments.get("file")
+                or arguments.get("path")
+            )
+            skill_name = (
+                arguments.get("name")
+                or arguments.get("skill")
+                or arguments.get("skill_name")
+            )
+            return self.skills.load_skill(
+                str(skill_name or "").strip(),
+                str(filename) if filename else None,
+            )
         if name == "searchWeb":
             return self._search_web(str(arguments.get("query") or ""))
         if name == "fetchWeb":
